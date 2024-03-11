@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import os
-import plotly.express as px
+
 
 
 import Rede_Neural as rna
