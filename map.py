@@ -147,7 +147,7 @@ def dataPreparation(dataSet, sample):
     # scale the test dataset
     val_x = scaler.transform(val_x)
     
-    match sample:
+    match st.session_state.sample:
         case "train":
             dataSet = train_ds
         case "test":
