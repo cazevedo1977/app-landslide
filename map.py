@@ -34,86 +34,15 @@ import plotly.express as px
 import matplotlib.pyplot as plt
 import utm
 
+
+
 APP_TITLE = 'Machine Learning for Landslide Susceptibility'
 APP_SUB_TITLE = 'From Theory to Practice: Machine Learning for Landslide Susceptibility Assessment in the Brazilian Atlantic Forest'
 
-def features_importance(X, y):
-    # Setup KBestFeatures class. k=5 most important features
-    fs = SelectKBest(score_func=f_classif, k=5)
-    # Apply feature selection
-    fs.fit_transform(X, y)
-    predictors = X.columns
-    #fs.pvalues_  | fs.scores_
-    scores = -np.log10(fs.pvalues_) #or scores /= scores.max()
-    scores = np.round(scores, 2)
-    return predictors, scores 
-
-def plot_classification_pie(source):
-
-    base = alt.Chart(source).encode(
-        theta=alt.Theta("total:Q", stack=True), 
-        color=alt.Color("classification:N", legend=None)
-    ).properties(
-        title=f"Prediction classification over {(source['total'].sum())} pinpoints"
-    )
-
-    
-
-    pie = base.mark_arc(outerRadius=100)
-    text = base.mark_text(radius=140, size=18).encode(text="classification:N")
-
-    chart = pie + text
-
-
-    return chart
-
-     
-@st.cache_data
-def plot_horizontal_bar(source):
-
-    chart = alt.Chart(source).mark_bar().encode(
-        x=alt.X(field="predictors", title=None),
-        y=alt.Y(
-            "scores:N",
-            sort=alt.Sort(field="scores", order="descending"),
-            title=None,
-        ),
-    ).transform_window(
-        rank='row_number()',
-        sort=[alt.SortField("scores", order="descending")],
-    ).properties(
-        title="Feature importance",
-    )
-
-    return chart 
-    
 
 
 
-def file_selector(folder_path='.\data'):
-    filenames = os.listdir(folder_path)
-    selected_filename = st.sidebar.selectbox(':open_file_folder: Select a file: ', filenames)
-    return os.path.join(folder_path, selected_filename)
-
-def getdata(fileName=None):
-    #Get data with UTM coordinates and convert them to lat/long
-    landslide_df = pd.read_csv(fileName)
-    zone_number = 23   #São Paulo coast UTM zone number
-    zone_letter = 'L'  #São Paulo coastUTM zone letter
-    landslide_df['lat'], landslide_df['lon'] = utm.to_latlon(easting=landslide_df['X'].values,northing= landslide_df['Y'].values,zone_number=zone_number,zone_letter=zone_letter)
-    
-    return landslide_df
-
-def run_prediction(dS,features):
-    #load trained ANN
-    bestNN = None 
-    bestNN = NeuralNetwork.load('customNN_guaruja_random.pkl')
-    y_pred = bestNN.predict(features)
-    dS['score'] = y_pred
-    dS['prediction'] = [int(b) for b in (y_pred > 0.5)]
-    return dS, y_pred
-
-# split data into training, validation and testing sets
+# Prepare and format data to perform prediction based on user selection
 def dataPreparation(dataSet, sample):
     
     dataSet = dataSet[['slope','aspect','elevation','land_use','lithology','twi','curvature','class','lat','lon']]
@@ -147,9 +76,9 @@ def dataPreparation(dataSet, sample):
     # scale the test dataset
     val_x = scaler.transform(val_x)
     
-    if "sample" not in st.session_state:
-        st.session_state.sample = "train"
-        
+    #if "sample" not in st.session_state:
+    #    st.session_state.sample = "train"
+
     match st.session_state.sample:
         case "train":
             dataSet = train_ds
@@ -161,6 +90,123 @@ def dataPreparation(dataSet, sample):
             dataSet
     
     return train_x, test_x, val_x, train_y, test_y, val_y, dataSet
+
+
+#Load trained ANN and predict landslide susceptibility 
+def run_prediction(dS,features):
+    bestNN = None 
+    bestNN = NeuralNetwork.load('customNN_guaruja_random.pkl')
+    y_pred = bestNN.predict(features)
+    dS['score'] = y_pred
+    dS['prediction'] = [int(b) for b in (y_pred > 0.5)]
+    return dS, y_pred
+
+
+#Compute feature importance based on ANOVA test score.
+def features_importance(X, y):
+    # Setup KBestFeatures class. k=5 most important features
+    fs = SelectKBest(score_func=f_classif, k=5)
+    # Apply feature selection
+    fs.fit_transform(X, y)
+    predictors = X.columns
+    #fs.pvalues_  | fs.scores_
+    scores = -np.log10(fs.pvalues_) #or scores /= scores.max()
+    scores = np.round(scores, 2)
+    return predictors, scores 
+
+
+
+##### user interface functions ##################
+
+def file_selector(folder_path='.\data'):
+    filenames = os.listdir(folder_path)
+    selected_filename = st.sidebar.selectbox(':open_file_folder: Select a file: ', filenames)
+    return os.path.join(folder_path, selected_filename)
+
+def display_user_interaction():
+    filename = file_selector()
+    #st.write('You selected `%s`' % filename)
+    if "sample" not in st.session_state:
+        st.session_state.sample = "train"
+
+    option = st.sidebar.selectbox(
+        'Map Style :world_map:',
+        ('OpenStreetMap', 'Cartodb dark_matter', 'CartoDB positron', 'OpenTopoMap'),
+        key='map_style',
+        index = 0
+        )
+
+    #st.sidebar.checkbox("Disable selectbox widget", key="disabled")
+    sample = st.sidebar.radio(
+        "Set dataset sample :eyeglasses:",
+        key="sample",
+        options=["train", "test", "validation","full"],
+        index=0
+    )
+
+    return filename, sample
+
+
+##### user interface functions ##################
+
+
+
+def plot_classification_pie(source):
+
+    base = alt.Chart(source).encode(
+        theta=alt.Theta("total:Q", stack=True), 
+        color=alt.Color("classification:N", legend=None)
+    ).properties(
+        title=f"Prediction classification over {(source['total'].sum())} pinpoints"
+    )
+
+    pie = base.mark_arc(outerRadius=100)
+    text = base.mark_text(radius=140, size=18).encode(text="classification:N")
+
+    chart = pie + text
+
+
+    return chart
+
+     
+@st.cache_data
+def plot_horizontal_bar(source):
+
+    chart = alt.Chart(source).mark_bar().encode(
+        x='scores:Q',
+        y="predictors:O"
+    ).properties(title="Feature importance")
+
+    #chart = alt.Chart(source).mark_bar().encode(
+    #    x=alt.X(field="predictors", title=None),
+    #    y=alt.Y(
+    #        "scores:N",
+    #        sort=alt.Sort(field="scores", order="descending"),
+    #        title=None,
+    #    ),
+    #).transform_window(
+    #    rank='row_number()',
+    #    sort=[alt.SortField("scores", order="descending")],
+    #).properties(
+    #    title="Feature importance",
+    #)
+
+    return chart 
+    
+
+
+
+
+def getdata(fileName=None):
+    #Get data with UTM coordinates and convert them to lat/long
+    landslide_df = pd.read_csv(fileName)
+    zone_number = 23   #São Paulo coast UTM zone number
+    zone_letter = 'L'  #São Paulo coastUTM zone letter
+    landslide_df['lat'], landslide_df['lon'] = utm.to_latlon(easting=landslide_df['X'].values,northing= landslide_df['Y'].values,zone_number=zone_number,zone_letter=zone_letter)
+    
+    return landslide_df
+
+
 
 # Compute and display performance metrics 
 def NetworkPerformance(y_real, y_prob):
@@ -189,29 +235,7 @@ def NetworkPerformance(y_real, y_prob):
     return accuracy, recall, auc 
 
 
-def display_user_interaction():
-    filename = file_selector()
-    #st.write('You selected `%s`' % filename)
-    if "sample" not in st.session_state:
-        st.session_state.sample = "train"
-        #st.session_state.disabled = False
 
-    option = st.sidebar.selectbox(
-        'Map Style :world_map:',
-        ('OpenStreetMap', 'Cartodb dark_matter', 'CartoDB positron', 'OpenTopoMap'),
-        key='map_style'
-        )
-
-
-    #st.sidebar.checkbox("Disable selectbox widget", key="disabled")
-    sample = st.sidebar.radio(
-        "Set dataset sample :eyeglasses:",
-        key="sample",
-        options=["train", "test", "validation","full"],
-        index=0
-    )
-
-    return filename, sample
 
 
 
