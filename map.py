@@ -53,7 +53,11 @@ def plot_classification_pie(source):
     base = alt.Chart(source).encode(
         theta=alt.Theta("total:Q", stack=True), 
         color=alt.Color("classification:N", legend=None)
+    ).properties(
+        title=f"Prediction Classification over {(source['total'].sum())} spots"
     )
+
+    
 
     pie = base.mark_arc(outerRadius=100)
     text = base.mark_text(radius=140, size=18).encode(text="classification:N")
@@ -201,6 +205,7 @@ def display_user_interaction():
         "Set dataset sample :eyeglasses:",
         key="sample",
         options=["train", "test", "validation","full"],
+        index=0
     )
 
     return filename, sample
