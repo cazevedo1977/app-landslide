@@ -375,3 +375,4 @@ if __name__ == "__main__":
 # https://stackoverflow.com/questions/71130194/switching-off-all-folium-tiles     
 # https://streamlit-emoji-shortcodes-streamlit-app-gwckff.streamlit.app/    
 # https://landslides.streamlit.app/
+# https://python-graph-gallery.com/312-add-markers-on-folium-map/
