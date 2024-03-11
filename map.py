@@ -54,7 +54,7 @@ def plot_classification_pie(source):
         theta=alt.Theta("total:Q", stack=True), 
         color=alt.Color("classification:N", legend=None)
     ).properties(
-        title=f"Prediction Classification over {(source['total'].sum())} spots"
+        title=f"Prediction classification over {(source['total'].sum())} pinpoints"
     )
 
     
@@ -232,7 +232,7 @@ def main():
     y = np.concatenate((y_train, y_val))
     y = np.concatenate((y, y_test))
 
-    match sample:
+    match st.session_state.sample:
         case "train":
             X = X_train
             y = y_train
@@ -252,11 +252,8 @@ def main():
     df_importance = df[['slope','aspect','elevation','land_use','lithology','twi','curvature']]
     predictors, scores = features_importance(X=df_importance,y=y)
     
-    
-    
-    
     #Display Metrics
-    st.subheader(f'Predictions Performance: {X.shape[0]} records')
+    st.subheader(f'Predictions Performance')
     col1, col2, col3 = st.columns(3)
     with col1:
         st.metric("Accurancy", '{:.2f}%'.format(acc*100))
@@ -313,8 +310,10 @@ def main():
 
 
      ## Create a map with a specified zoom level
-    col4, col5 = st.columns(2)
+    col4, col5, col6 = st.columns(3)
     
+    ann_prediction_data = pd.DataFrame({'classification': ['right', 'wrong'], 'total': [len(df[df['class'] == df['prediction']]),4]})
+
     pie_data = pd.DataFrame({'classification': ['high', 'moderate', 'low'], 
                              'total': [len(df[df['score']>=0.9]),len(df[(df["score"]>= 0.5) & (df["score"]<=0.9)]),len(df[df['score']<0.5])]})
     
@@ -322,10 +321,12 @@ def main():
 
     chart_classification = plot_classification_pie(source=pie_data)
     chart_features_importance = plot_horizontal_bar(source=chart_data)
+    chart_prediction_assessment = plot_classification_pie(source=pie_data)
 
     
     col4.altair_chart(chart_classification, theme="streamlit", use_container_width=True)
     col5.altair_chart(chart_features_importance, theme="streamlit", use_container_width=True)
+    col6.altair_chart(chart_prediction_assessment, theme="streamlit", use_container_width=True)
     
     st.write(df)
 
@@ -340,4 +341,4 @@ if __name__ == "__main__":
 # https://github.com/opengeos/streamlit-geospatial/tree/master?tab=readme-ov-file
 # https://stackoverflow.com/questions/71130194/switching-off-all-folium-tiles     
 # https://streamlit-emoji-shortcodes-streamlit-app-gwckff.streamlit.app/    
-# https://altair.streamlit.app/Pie_Chart (otima referência)    
+# https://landslides.streamlit.app/
