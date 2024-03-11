@@ -76,18 +76,13 @@ def dataPreparation(dataSet, sample):
     # scale the test dataset
     val_x = scaler.transform(val_x)
     
-    #if "sample" not in st.session_state:
-    #    st.session_state.sample = "train"
+    if st.session_state.sample == "train":
+        dataSet = train_ds
+    elif st.session_state.sample == "test":
+        dataSet = test_ds
+    elif st.session_state.sample == "validation":
+        dataSet = val_ds
 
-    match st.session_state.sample:
-        case "train":
-            dataSet = train_ds
-        case "test":
-            dataSet = test_ds
-        case "validation":
-            dataSet = val_ds
-        case _:
-            dataSet
     
     return train_x, test_x, val_x, train_y, test_y, val_y, dataSet
 
