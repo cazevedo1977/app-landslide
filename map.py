@@ -150,13 +150,14 @@ def NetworkPerformance(y_real, y_prob):
 
 ##### sidebar user interface functions ##################
 
-def file_selector(folder_path='.\data'):
+def file_selector(folder_path=os.path.abspath(os.getcwd())):
     filenames = os.listdir(folder_path)
     selected_filename = st.sidebar.selectbox(':open_file_folder: Select a file: ', filenames)
     return os.path.join(folder_path, selected_filename)
 
 def display_user_interaction():
-    filename = file_selector()
+    _path = os.path.join(os.path.abspath(os.getcwd()), 'data')
+    filename = file_selector(folder_path=_path)
     #st.write('You selected `%s`' % filename)
 
     option = st.sidebar.selectbox(
@@ -269,7 +270,7 @@ def plot_bar_ann_assessment(source):
     ).properties(title="ANN assessment")
     return chart
      
-@st.cache_data
+
 def plot_horizontal_bar(source):
 
     chart = alt.Chart(source).mark_bar().encode(
