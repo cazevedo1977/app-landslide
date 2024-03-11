@@ -294,16 +294,17 @@ def main():
         if df.iloc[i]['class'] == df.iloc[i]['prediction']:
             prediction_accuracy = "true"
 
-        match df.iloc[i]['score']:
-            case num if 0 <= num <  0.5: 
-                color = 'green'
-                classification = 'low'
-            case num if 0.5 <= num <  0.9: 
-                color = 'yellow'
-                classification = 'moderate'
-            case _:
-                color = 'red'
-                classification = 'high'
+        
+        if 0 <= df.iloc[i]['score'] < 0.5:
+            color = 'green'
+            classification = 'low'
+        elif 0.5 <= df.iloc[i]['score'] < 0.9:
+            color = 'yellow'
+            classification = 'moderate'
+        else:
+            color = 'red'
+            classification = 'high'
+        
 
 
         html=f"""
