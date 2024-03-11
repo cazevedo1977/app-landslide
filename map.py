@@ -254,17 +254,17 @@ def main():
     y = np.concatenate((y_train, y_val))
     y = np.concatenate((y, y_test))
 
-    match st.session_state.sample:
-        case "train":
-            X = X_train
-            y = y_train
-        case "test":
-            X = X_test
-            y = y_test
-        case "validation":
-            X = X_val
-            y = y_val
-        
+    
+    if st.session_state.sample == "train":
+        X = X_train
+        y = y_train
+    elif st.session_state.sample == "test":
+        X = X_test
+        y = y_test
+    elif st.session_state.sample == "validation":
+        X = X_val
+        y = y_val
+    
     y = y.ravel() #convert that array shape to (n, ) (i.e. flatten it)
     
     #Predict landslide based on prepared data and return dataset with computed columns
