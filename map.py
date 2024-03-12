@@ -102,7 +102,7 @@ def dataPreparation(dataSet):
     
     y = y.ravel() #convert that array shape to (n, ) (i.e. flatten it)    
 
-    
+    #print("data prep")
     return X, y, dataSet
 
 ##### predictions functions ##################
@@ -298,6 +298,7 @@ def plot_horizontal_bar(source):
 
 
 def main():
+    st.theme = "dark"
     st.set_page_config(page_title=APP_TITLE, layout="wide")
     st.title(APP_TITLE)
     st.caption(APP_SUB_TITLE)
@@ -359,6 +360,7 @@ if __name__ == "__main__":
     main()
 
 #references:
+# https://altair.streamlit.app/ (biblioteca excelente de gráficos)
 # https://docs.kanaries.net/topics/Streamlit/streamlit-map
 # https://www.countrycoordinate.com/city-guaruja-brazil/
 # https://github.com/opengeos/streamlit-geospatial/tree/master
@@ -368,6 +370,8 @@ if __name__ == "__main__":
 # https://streamlit-emoji-shortcodes-streamlit-app-gwckff.streamlit.app/    
 # https://landslides.streamlit.app/ (url da aplicação)
 # https://github.com/randyzwitch/streamlit-folium/issues/7 (sobre mapa com tamanho total da tela)    
+# https://fabiobenevides.medium.com/planejando-e-visualizando-informa%C3%A7%C3%B5es-de-sua-viagem-utilizando-python-folium-e-google-912bce9e109c (sobre tooltip do mapa)
+# https://stackoverflow.com/questions/62789558/is-it-possible-to-change-the-popup-background-colour-in-folium (sobre tooltip do mapa)
 # https://python-graph-gallery.com/312-add-markers-on-folium-map/
 # https://discuss.streamlit.io/t/modulenotfounderror-no-module-named-sklearn/48314/5 (sobre a instalação das libs no server streamlit)    
 # https://docs.streamlit.io/streamlit-community-cloud/deploy-your-app/app-dependencies (sobre a instalação das libs no server streamlit)    
