@@ -116,7 +116,7 @@ def run_prediction(dS,features):
     return dS, y_pred
 
 
-#Compute feature importance based on ANOVA test score.
+#Compute feature importance based on ANOVA/F-test score.
 def features_importance(X, y):
     # Setup KBestFeatures class. k=5 most important features
     fs = SelectKBest(score_func=f_classif, k=5)
@@ -126,6 +126,8 @@ def features_importance(X, y):
     #fs.pvalues_  | fs.scores_
     scores = -np.log10(fs.pvalues_) #or scores /= scores.max()
     scores = np.round(scores, 2)
+    scores = (scores/scores.max())*10 #podemos normalizar só para manter a mesma escala.
+
     return predictors, scores 
 
 # Compute and display performance metrics 
@@ -156,11 +158,11 @@ def file_selector(folder_path=os.path.abspath(os.getcwd())):
     return os.path.join(folder_path, selected_filename)
 
 def display_user_interaction():
-    _path = os.path.join(os.path.abspath(os.getcwd()), 'data')
-    filename = file_selector(folder_path=_path)
+    path = os.path.join(os.path.abspath(os.getcwd()), 'data')
+    filename = file_selector(folder_path=path)
     #st.write('You selected `%s`' % filename)
 
-    option = st.sidebar.selectbox(
+    st.sidebar.selectbox(
         'Map Style :world_map:',
         ('OpenStreetMap', 'Cartodb dark_matter', 'CartoDB positron', 'OpenTopoMap'),
         key='map_style',
@@ -168,14 +170,14 @@ def display_user_interaction():
         )
 
     #st.sidebar.checkbox("Disable selectbox widget", key="disabled")
-    sample = st.sidebar.radio(
+    st.sidebar.radio(
         "Set dataset sample:",
         key="sample",
         options=["train", "test", "validation","full"],
         index=0
     )
 
-    return filename, sample
+    return filename
 ##### end sidebar user interface functions ##################
 
 ##### metrics, charts and maps functions ##################
@@ -206,7 +208,7 @@ def plot_map(df):
 
 
         html=f"""
-            <div style="width: 100%; z-index: 2; border-radius: 10px; border-radius: 4px; color: white; font-size: 12px; background-color: #192733; font-family: courier new">
+            <div style="width: 165px; height=210px; z-index: 2; border-radius: 10px; border-radius: 4px; color: white; font-size: 12px; background-color: #192733; font-family: courier new">
             <h5> ANN classification: {classification}</h5>
             <p style="font-size:10px">Additional information:</p>
             <ul>
@@ -227,7 +229,7 @@ def plot_map(df):
             </div>
             """
         
-        iframe = folium.IFrame(html=html, width=175, height=168)
+        iframe = folium.IFrame(html=html, width=175, height=210)
         popup = folium.Popup(iframe, max_width=2650)
         folium.Marker(
             location=[df.iloc[i]['lat'], df.iloc[i]['lon']],
@@ -295,16 +297,6 @@ def plot_horizontal_bar(source):
 
 
 
-
-
-
-
-
-
-
-
-
-
 def main():
     st.set_page_config(page_title=APP_TITLE, layout="wide")
     st.title(APP_TITLE)
@@ -315,7 +307,7 @@ def main():
         * **Data source:** [Caio Azevedo Github](https://github.com/cazevedo1977/academico/tree/main/doutorado/tese/paper_susceptibility_map).
         """)
     
-    filename, sample = display_user_interaction()
+    filename =  display_user_interaction()
     
     #Load and Prepare Data depending on user selected data file and sample
     df = getdata(fileName = filename)
@@ -361,7 +353,6 @@ def main():
     map = plot_map(df=df)    
     st_folium(fig=map, width=1200,height=500)
 
-    
     st.write(df,unsafe_allow_html=True)
 
 if __name__ == "__main__":
@@ -375,5 +366,8 @@ if __name__ == "__main__":
 # https://github.com/opengeos/streamlit-geospatial/tree/master?tab=readme-ov-file
 # https://stackoverflow.com/questions/71130194/switching-off-all-folium-tiles     
 # https://streamlit-emoji-shortcodes-streamlit-app-gwckff.streamlit.app/    
-# https://landslides.streamlit.app/
+# https://landslides.streamlit.app/ (url da aplicação)
+# https://github.com/randyzwitch/streamlit-folium/issues/7 (sobre mapa com tamanho total da tela)    
 # https://python-graph-gallery.com/312-add-markers-on-folium-map/
+# https://discuss.streamlit.io/t/modulenotfounderror-no-module-named-sklearn/48314/5 (sobre a instalação das libs no server streamlit)    
+# https://docs.streamlit.io/streamlit-community-cloud/deploy-your-app/app-dependencies (sobre a instalação das libs no server streamlit)    
