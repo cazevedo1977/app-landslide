@@ -39,17 +39,81 @@ APP_SUB_TITLE = 'From Theory to Practice: Machine Learning for Landslide Suscept
 
 
 #Get data with UTM coordinates and convert them to lat/long
+@st.cache_data
 def getdata(fileName=None):
     landslide_df = pd.read_csv(fileName)
     zone_number = 23   #São Paulo coast UTM zone number
     zone_letter = 'L'  #São Paulo coastUTM zone letter
     landslide_df['lat'], landslide_df['lon'] = utm.to_latlon(easting=landslide_df['X'].values,northing= landslide_df['Y'].values,zone_number=zone_number,zone_letter=zone_letter)
     
+    print("getdata " + fileName)
     return landslide_df
 
 
 # Prepare and format data to perform prediction based on user selection
 def dataPreparation(dataSet):
+    
+    dataSet = dataSet[['slope','aspect','elevation','land_use','lithology','twi','curvature','class','lat','lon']]
+    y = dataSet['class']
+    
+    # split data into training, validation and testing sets
+    test_size = 0.30
+    train_ds, test_ds, train_dsy, test_dsy = train_test_split(dataSet, y, test_size=test_size, shuffle=False)
+    train_ds, val_ds, train_dsy, val_dsy   = train_test_split(train_ds,train_dsy, test_size=test_size, shuffle=False)
+
+    
+    train_x  = train_ds
+    train_x  = train_x.drop(['class','lat','lon'],axis=1)
+    
+    test_x  = test_ds
+    test_x  = test_x.drop(['class','lat','lon'],axis=1)
+
+    
+    val_x  = val_ds
+    val_x  = val_x.drop(['class','lat','lon'],axis=1)
+
+    train_y = train_dsy.to_numpy().reshape(-1,1)
+    test_y = test_dsy.to_numpy().reshape(-1,1)
+    val_y = val_dsy.to_numpy().reshape(-1,1)
+
+    
+    # define the scaler
+    scaler = MinMaxScaler(feature_range=(-1, 1)) 
+    #scaler = MinMaxScaler() 
+    # fit on the training dataset
+    scaler.fit(train_x)
+    # scale the training dataset
+    train_x = scaler.transform(train_x)
+    # scale the test dataset
+    test_x = scaler.transform(test_x)
+    # scale the test dataset
+    val_x = scaler.transform(val_x)
+    
+    if st.session_state.sample == "train":
+        dataSet = train_ds
+        X = train_x
+        y = train_y
+    elif st.session_state.sample == "test":
+        dataSet = test_ds
+        X = test_x
+        y = test_y
+    elif st.session_state.sample == "validation":
+        dataSet = val_ds
+        X = val_x
+        y = val_y
+    else:
+        X = np.concatenate((train_x, val_x))
+        X = np.concatenate((X, test_x))
+        y = np.concatenate((train_y, val_y))
+        y = np.concatenate((y, test_y))
+
+    y = y.ravel() #convert that array shape to (n, ) (i.e. flatten it)    
+
+    #print("data prep " + st.session_state.sample)
+    return X, y, dataSet
+
+# Prepare and format data to perform prediction based on user selection
+def dataPreparation2(dataSet):
     
     dataSet = dataSet[['slope','aspect','elevation','land_use','lithology','twi','curvature','class','lat','lon']]
     X = dataSet.drop('class',axis=1)
@@ -160,8 +224,7 @@ def file_selector(folder_path=os.path.abspath(os.getcwd())):
 def display_user_interaction():
     path = os.path.join(os.path.abspath(os.getcwd()), 'data')
     filename = file_selector(folder_path=path)
-    #st.write('You selected `%s`' % filename)
-
+    
     st.sidebar.selectbox(
         'Map Style :world_map:',
         ('OpenStreetMap', 'Cartodb dark_matter', 'CartoDB positron', 'OpenTopoMap'),
@@ -280,17 +343,6 @@ def plot_horizontal_bar(source):
         y="predictors:O"
     ).properties(title="Feature importance")
 
-    #chart = alt.Chart(source).mark_bar().encode(
-    #    x=alt.X(field="predictors", title=None),
-    #    y=alt.Y(
-    #        "scores:N",
-    #        sort=alt.Sort(field="scores", order="descending"),
-    #        title=None,
-    #    ),
-    #).transform_window(
-    #    rank='row_number()',
-    #    sort=[alt.SortField("scores", order="descending")],
-
     return chart 
     
 ##### end metrics, charts and maps functions ##################
@@ -308,10 +360,10 @@ def main():
         * **Data source:** [Caio Azevedo Github](https://github.com/cazevedo1977/academico/tree/main/doutorado/tese/paper_susceptibility_map).
         """)
     
-    filename =  display_user_interaction()
+    #filename =  display_user_interaction()
     
     #Load and Prepare Data depending on user selected data file and sample
-    df = getdata(fileName = filename)
+    df = getdata(fileName = display_user_interaction())
     X, y, df = dataPreparation(df)
     
     #Predict landslide based on prepared data and return dataset with computed columns
@@ -375,3 +427,4 @@ if __name__ == "__main__":
 # https://python-graph-gallery.com/312-add-markers-on-folium-map/
 # https://discuss.streamlit.io/t/modulenotfounderror-no-module-named-sklearn/48314/5 (sobre a instalação das libs no server streamlit)    
 # https://docs.streamlit.io/streamlit-community-cloud/deploy-your-app/app-dependencies (sobre a instalação das libs no server streamlit)    
+# https://www.askpython.com/python-modules/streamlit-theming (Theme)
