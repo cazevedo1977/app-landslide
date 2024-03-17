@@ -357,7 +357,7 @@ def main():
     st.markdown("""
             This app performs landslide susceptibility prediction based on data from Guarujá - Brazil!
         * **Python libraries:** in-house neural network, pandas, streamlit
-        * **Code and Data sources:** [Caio Azevedo Github](https://github.com/cazevedo1977/academico/tree/main/doutorado/tese/paper_susceptibility_map) & **Theoretical Foundation** [Masters Dissertation](https://www.teses.usp.br/teses/disponiveis/3/3136/tde-11052022-103227/publico/CaiodaSivaAzevedoCorr22.pdf).
+        * **Code and data sources:** [Caio Azevedo Github](https://github.com/cazevedo1977/academico/tree/main/doutorado/tese/paper_susceptibility_map) & **Theoretical Foundation** [Masters Dissertation](https://www.teses.usp.br/teses/disponiveis/3/3136/tde-11052022-103227/publico/CaiodaSivaAzevedoCorr22.pdf).
         """)
     
     #filename =  display_user_interaction()
